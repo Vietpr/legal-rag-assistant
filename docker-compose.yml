@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  legal-rag:
+    build: .
+    container_name: legal-rag-dev
+    volumes:
+      - .:/app       
+    working_dir: /app
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    tty: true
