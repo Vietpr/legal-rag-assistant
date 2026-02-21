@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal RAG Assistant — Trợ lý Pháp lý AI</title>
+    <meta name="description" content="Trợ lý pháp lý AI — Trả lời câu hỏi luật Việt Nam có trích dẫn Điều/Khoản">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon"></div>
+                    <div>
+                        <h1>Legal RAG Assistant</h1>
+                        <p class="subtitle">Trợ lý Pháp lý AI — Luật Việt Nam</p>
+                    </div>
+                </div>
+                <div class="header-badge">RAG + Gemini</div>
+            </div>
+        </header>
+
+        <!-- Chat Area -->
+        <main class="chat-area" id="chatArea">
+            <!-- Welcome message -->
+            <div class="welcome" id="welcome">
+                <div class="welcome-icon"></div>
+                <h2>Xin chào! Tôi là Trợ lý Pháp lý AI</h2>
+                <p>Hãy đặt câu hỏi về luật Việt Nam, tôi sẽ trả lời dựa trên các văn bản pháp luật có trích dẫn cụ thể.
+                </p>
+                <div class="suggestions">
+                    <button class="suggestion-chip" onclick="useSuggestion(this)">Hợp đồng lao động cần những điều khoản
+                        gì?</button>
+                    <button class="suggestion-chip" onclick="useSuggestion(this)">Mức lương tối thiểu vùng hiện
+                        nay?</button>
+                    <button class="suggestion-chip" onclick="useSuggestion(this)">Quy định về bảo hiểm xã hội cho người
+                        lao động?</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Input Area -->
+        <footer class="input-area">
+            <div class="input-container">
+                <div class="filters" id="filters">
+                    <select id="versionFilter" class="filter-select">
+                        <option value="">Tất cả phiên bản</option>
+                        <option value="origin_law">Luật gốc</option>
+                        <option value="update_law">Luật sửa đổi</option>
+                    </select>
+                    <select id="lawTypeFilter" class="filter-select">
+                        <option value="">Tất cả loại</option>
+                        <option value="Luật">Luật</option>
+                        <option value="Nghị định">Nghị định</option>
+                        <option value="Thông tư">Thông tư</option>
+                    </select>
+                </div>
+                <form class="input-form" id="inputForm">
+                    <textarea id="questionInput" class="input-field" placeholder="Nhập câu hỏi pháp lý của bạn..."
+                        rows="1"></textarea>
+                    <button type="submit" class="send-btn" id="sendBtn" title="Gửi câu hỏi">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+
+</html>

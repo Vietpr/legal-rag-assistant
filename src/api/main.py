@@ -1,8 +1,14 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 from fastapi import FastAPI, Query
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from src.api.rag_chain import rag
+
+# Path to frontend directory
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 
 
 # load models on startup
@@ -19,6 +25,9 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+# Serve static files (CSS, JS)
+app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
 
 
 # Models
@@ -39,7 +48,14 @@ class SearchResult(BaseModel):
     total: int
 
 
-# Endpoints
+# ─── Endpoints ───
+
+@app.get("/", include_in_schema=False)
+def serve_frontend():
+    """Serve the frontend UI at root URL."""
+    return FileResponse(str(FRONTEND_DIR / "index.html"))
+
+
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "Legal RAG Assistant"}

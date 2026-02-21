@@ -1,14 +1,15 @@
-version: "3.9"
-
 services:
   legal-rag:
     build: .
     container_name: legal-rag-dev
     volumes:
-      - .:/app       
+      - .:/app
+      - model-cache:/root/.cache    # Cache HuggingFace models
     working_dir: /app
     env_file:
       - .env
     ports:
       - "8000:8000"
-    tty: true
+
+volumes:
+  model-cache:
