@@ -15,11 +15,11 @@ load_dotenv()
 CHROMA_DIR = Path("data/vectordb")
 COLLECTION_NAME = "legal_chunks"
 MODEL_NAME = "BAAI/bge-m3"
-GEMINI_MODEL = "gemini-2.0-flash"
+GEMINI_MODEL = "gemini-2.5-flash"
 
 # Search params
-SEARCH_TOP_K = 5   # Retrieve top-5 from ChromaDB
-FINAL_TOP_K = 3    # After re-rank, keep top-3 for context
+SEARCH_TOP_K = 7   # Retrieve top-7 from ChromaDB
+FINAL_TOP_K = 5    # After re-rank, keep top-5 for context
 
 
 class LegalRAG:
@@ -94,10 +94,31 @@ class LegalRAG:
                 **meta,
             })
 
-        # Re-rank by issued_year DESC
-        parsed.sort(key=lambda x: x.get("issued_year", 0), reverse=True)
+        # Re-rank: combine semantic relevance (distance) with year recency
+        # Lower distance = more relevant. We want relevance-first ranking.
+        import datetime
+        current_year = datetime.datetime.now().year
 
-        return parsed[:FINAL_TOP_K]
+        for p in parsed:
+            distance = p.get("distance", 1.0)
+            year = p.get("issued_year") or 2000
+            # Normalize year bonus: max 0.05 bonus for current year, 0 for very old
+            year_bonus = max(0, (year - 2000) / (current_year - 2000)) * 0.05
+            # Combined score: lower is better (distance - year_bonus)
+            p["_score"] = distance - year_bonus
+
+        parsed.sort(key=lambda x: x.get("_score", 1.0))
+
+        # Deduplicate: keep only 1 chunk per article (the most relevant one)
+        seen_articles = set()
+        deduped = []
+        for p in parsed:
+            article_key = f"{p.get('law_name', '')}_{p.get('article', '')}"
+            if article_key not in seen_articles:
+                seen_articles.add(article_key)
+                deduped.append(p)
+
+        return deduped[:FINAL_TOP_K]
 
     def ask(
         self,
