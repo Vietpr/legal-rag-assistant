@@ -96,7 +96,6 @@ def clean_text(text: str) -> str:
     """
     Clean legal document text:
     - Remove header/footer/separator/footnote markers
-    - Preserve Chapter–Article–Clause–Point structure
     - Insert blank lines before structure markers
     - Merge split chapter title lines
     """

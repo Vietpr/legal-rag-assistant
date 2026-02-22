@@ -2,7 +2,6 @@ import json
 import sys
 from pathlib import Path
 from tqdm import tqdm
-
 from sentence_transformers import SentenceTransformer
 import chromadb
 

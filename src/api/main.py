@@ -7,7 +7,6 @@ from pydantic import BaseModel
 
 from src.api.rag_chain import rag
 
-# Path to frontend directory
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 
 

@@ -1,4 +1,7 @@
 import os
+import re
+import time
+import datetime
 from pathlib import Path
 from dotenv import load_dotenv
 from google import genai
@@ -23,29 +26,27 @@ FINAL_TOP_K = 5    # After re-rank, keep top-5 for context
 
 
 class LegalRAG:
-    """Legal RAG pipeline: Search + Gemini."""
-
     def __init__(self):
-        self._embedding_model = None
-        self._collection = None
-        self._gemini_client = None
+        self.embedding_model = None
+        self.collection = None
+        self.gemini_client = None
 
     def init(self):
         # 1. Embedding model
         print("Loading embedding model...")
-        self._embedding_model = SentenceTransformer(MODEL_NAME)
-        print(f"Embedding model loaded (dim={self._embedding_model.get_sentence_embedding_dimension()})")
+        self.embedding_model = SentenceTransformer(MODEL_NAME)
+        print(f"Embedding model loaded (dim={self.embedding_model.get_sentence_embedding_dimension()})")
 
         # 2. ChromaDB
         client = chromadb.PersistentClient(path=str(CHROMA_DIR))
-        self._collection = client.get_collection(COLLECTION_NAME)
-        print(f"ChromaDB connected ({self._collection.count()} chunks)")
+        self.collection = client.get_collection(COLLECTION_NAME)
+        print(f"ChromaDB connected ({self.collection.count()} chunks)")
 
         # 3. Gemini client
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY not found! Set it in .env file.")
-        self._gemini_client = genai.Client(api_key=api_key)
+        self.gemini_client = genai.Client(api_key=api_key)
         print("Gemini client ready")
 
     def search(
@@ -56,7 +57,7 @@ class LegalRAG:
         law_type: str = None,
     ) -> list[dict]:
         # Embed query
-        query_embedding = self._embedding_model.encode(
+        query_embedding = self.embedding_model.encode(
             [query], normalize_embeddings=True
         ).tolist()
 
@@ -81,7 +82,7 @@ class LegalRAG:
         if where_filter:
             query_params["where"] = where_filter
 
-        results = self._collection.query(**query_params)
+        results = self.collection.query(**query_params)
 
         # Parse
         parsed = []
@@ -96,7 +97,6 @@ class LegalRAG:
 
         # Re-rank: combine semantic relevance (distance) with year recency
         # Lower distance = more relevant. We want relevance-first ranking.
-        import datetime
         current_year = datetime.datetime.now().year
 
         for p in parsed:
@@ -105,9 +105,9 @@ class LegalRAG:
             # Normalize year bonus: max 0.05 bonus for current year, 0 for very old
             year_bonus = max(0, (year - 2000) / (current_year - 2000)) * 0.05
             # Combined score: lower is better (distance - year_bonus)
-            p["_score"] = distance - year_bonus
+            p["score"] = distance - year_bonus
 
-        parsed.sort(key=lambda x: x.get("_score", 1.0))
+        parsed.sort(key=lambda x: x.get("score", 1.0))
 
         # Deduplicate: keep only 1 chunk per article (the most relevant one)
         seen_articles = set()
@@ -120,6 +120,53 @@ class LegalRAG:
 
         return deduped[:FINAL_TOP_K]
 
+    def expand_chunks(self, chunks: list[dict]) -> list[dict]:
+        """Expand multi-part chunks: if a chunk is part of a split article
+        (chunk_id ends with _p1, _p2, ...), fetch all sibling parts
+        and merge their texts so the full article is in context."""
+        expanded = []
+
+        for chunk in chunks:
+            chunk_id = chunk.get("chunk_id", "")
+            match = re.match(r"(.+)_p(\d+)$", chunk_id)
+
+            if not match:
+                # Single chunk article, no expansion needed
+                expanded.append(chunk)
+                continue
+
+            base_id = match.group(1)
+
+            # Try fetching parts p1 through p10 (covers all cases)
+            part_ids = [f"{base_id}_p{i}" for i in range(1, 11)]
+            try:
+                result = self.collection.get(ids=part_ids)
+                if result and result["ids"]:
+                    # Sort parts by part number
+                    parts = []
+                    for i, pid in enumerate(result["ids"]):
+                        part_num = int(re.search(r"_p(\d+)$", pid).group(1))
+                        parts.append({
+                            "part_num": part_num,
+                            "text": result["documents"][i],
+                        })
+                    parts.sort(key=lambda x: x["part_num"])
+
+                    # Merge all part texts into the chunk
+                    merged_text = "\n".join(p["text"] for p in parts)
+                    merged_chunk = dict(chunk)
+                    merged_chunk["text"] = merged_text
+                    merged_chunk["expanded_parts"] = len(parts)
+                    expanded.append(merged_chunk)
+                    print(f"Expanded {base_id}: merged {len(parts)} parts")
+                else:
+                    expanded.append(chunk)
+            except Exception as e:
+                print(f"Chunk expansion failed for {chunk_id}: {e}")
+                expanded.append(chunk)
+
+        return expanded
+
     def ask(
         self,
         question: str,
@@ -130,6 +177,9 @@ class LegalRAG:
 
         # 1. Search
         chunks = self.search(question, version=version, law_type=law_type)
+
+        # 1.5 Expand multi-part chunks (fetch all parts of split articles)
+        chunks = self.expand_chunks(chunks)
 
         if not chunks:
             return {
@@ -147,7 +197,7 @@ class LegalRAG:
 
         for attempt in range(max_retries):
             try:
-                response = self._gemini_client.models.generate_content(
+                response = self.gemini_client.models.generate_content(
                     model=GEMINI_MODEL,
                     contents=user_prompt,
                     config=genai.types.GenerateContentConfig(
@@ -163,7 +213,6 @@ class LegalRAG:
                 if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
                     wait = (attempt + 1) * 15  # 15s, 30s, 45s
                     print(f"Rate limited, retrying in {wait}s... (attempt {attempt + 1}/{max_retries})")
-                    import time
                     time.sleep(wait)
                 else:
                     answer = f"Gemini API error: {error_msg}"
