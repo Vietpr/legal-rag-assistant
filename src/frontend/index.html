@@ -13,71 +13,118 @@
 </head>
 
 <body>
-    <div class="app">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-content">
-                <div class="logo">
-                    <div class="logo-icon"></div>
-                    <div>
-                        <h1>Legal RAG Assistant</h1>
-                        <p class="subtitle">Trợ lý Pháp lý AI — Luật Việt Nam</p>
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-title">Your Chats</h2>
+                <button class="new-chat-btn" id="newChatBtn" title="Cuộc trò chuyện mới">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    New Chat
+                </button>
+            </div>
+            <div class="sidebar-list" id="sidebarList">
+                <!-- Chat items rendered by JS -->
+            </div>
+            <div class="sidebar-footer">
+                <button class="clear-all-btn" id="clearAllBtn" title="Xóa tất cả cuộc trò chuyện">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    Xóa tất cả
+                </button>
+            </div>
+        </aside>
+
+        <!-- Sidebar overlay for mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main content -->
+        <div class="app">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <button class="sidebar-toggle" id="sidebarToggle" title="Toggle sidebar">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                <line x1="3" y1="12" x2="21" y2="12"></line>
+                                <line x1="3" y1="18" x2="21" y2="18"></line>
+                            </svg>
+                        </button>
+                        <div class="logo">
+                            <div class="logo-icon"></div>
+                            <div>
+                                <h1>Legal RAG Assistant</h1>
+                                <p class="subtitle">Trợ lý Pháp lý AI — Luật Việt Nam</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="header-badge">RAG + Gemini</div>
-            </div>
-        </header>
+            </header>
 
-        <!-- Chat Area -->
-        <main class="chat-area" id="chatArea">
-            <!-- Welcome message -->
-            <div class="welcome" id="welcome">
-                <div class="welcome-icon"></div>
-                <h2>Xin chào! Tôi là Trợ lý Pháp lý AI</h2>
-                <p>Hãy đặt câu hỏi về Luật Lao động, Việc làm, Bảo hiểm xã hội, Bảo hiểm y tế - tôi sẽ trả lời dựa trên
-                    các văn bản pháp luật có trích dẫn cụ thể.</p>
-                <div class="suggestions">
-                    <button class="suggestion-chip" onclick="useSuggestion(this)">Điều kiện hưởng trợ cấp thất nghiệp
-                        theo Luật Việc làm 2013?</button>
-                    <button class="suggestion-chip" onclick="useSuggestion(this)">Người lao động có quyền đơn phương
-                        chấm dứt hợp đồng lao động khi nào?</button>
-                    <button class="suggestion-chip" onclick="useSuggestion(this)">Mức đóng bảo hiểm y tế hàng tháng là
-                        bao nhiêu?</button>
-                    <button class="suggestion-chip" onclick="useSuggestion(this)">Chế độ thai sản theo Luật Bảo hiểm xã
-                        hội quy định như thế nào?</button>
+            <!-- Chat Area -->
+            <main class="chat-area" id="chatArea">
+                <!-- Welcome message -->
+                <div class="welcome" id="welcome">
+                    <div class="welcome-icon"></div>
+                    <h2>Xin chào! Tôi là Trợ lý Pháp lý AI</h2>
+                    <p>Hãy đặt câu hỏi về Luật Lao động, Việc làm, Bảo hiểm xã hội, Bảo hiểm y tế - tôi sẽ trả lời dựa
+                        trên
+                        các văn bản pháp luật có trích dẫn cụ thể.</p>
+                    <div class="suggestions">
+                        <button class="suggestion-chip" onclick="useSuggestion(this)">Điều kiện hưởng trợ cấp thất
+                            nghiệp
+                            theo Luật Việc làm 2013?</button>
+                        <button class="suggestion-chip" onclick="useSuggestion(this)">Người lao động có quyền đơn phương
+                            chấm dứt hợp đồng lao động khi nào?</button>
+                        <button class="suggestion-chip" onclick="useSuggestion(this)">Mức đóng bảo hiểm y tế hàng tháng
+                            là
+                            bao nhiêu?</button>
+                        <button class="suggestion-chip" onclick="useSuggestion(this)">Chế độ thai sản theo Luật Bảo hiểm
+                            xã
+                            hội quy định như thế nào?</button>
+                    </div>
                 </div>
-            </div>
-        </main>
+            </main>
 
-        <!-- Input Area -->
-        <footer class="input-area">
-            <div class="input-container">
-                <div class="filters" id="filters">
-                    <select id="versionFilter" class="filter-select">
-                        <option value="">Tất cả phiên bản</option>
-                        <option value="origin_law">Luật gốc</option>
-                        <option value="update_law">Luật sửa đổi</option>
-                    </select>
-                    <select id="lawTypeFilter" class="filter-select">
-                        <option value="">Tất cả loại</option>
-                        <option value="Luật">Luật</option>
-                        <option value="Nghị định">Nghị định</option>
-                        <option value="Văn bản hợp nhất">Văn bản hợp nhất</option>
-                    </select>
+            <!-- Input Area -->
+            <footer class="input-area">
+                <div class="input-container">
+                    <div class="filters" id="filters">
+                        <select id="versionFilter" class="filter-select">
+                            <option value="">Tất cả phiên bản</option>
+                            <option value="origin_law">Luật gốc</option>
+                            <option value="update_law">Luật sửa đổi</option>
+                        </select>
+                        <select id="lawTypeFilter" class="filter-select">
+                            <option value="">Tất cả loại</option>
+                            <option value="Luật">Luật</option>
+                            <option value="Nghị định">Nghị định</option>
+                            <option value="Văn bản hợp nhất">Văn bản hợp nhất</option>
+                        </select>
+                    </div>
+                    <form class="input-form" id="inputForm">
+                        <textarea id="questionInput" class="input-field" placeholder="Nhập câu hỏi pháp lý của bạn..."
+                            rows="1"></textarea>
+                        <button type="submit" class="send-btn" id="sendBtn" title="Gửi câu hỏi">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                        </button>
+                    </form>
                 </div>
-                <form class="input-form" id="inputForm">
-                    <textarea id="questionInput" class="input-field" placeholder="Nhập câu hỏi pháp lý của bạn..."
-                        rows="1"></textarea>
-                    <button type="submit" class="send-btn" id="sendBtn" title="Gửi câu hỏi">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="22" y1="2" x2="11" y2="13"></line>
-                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                        </svg>
-                    </button>
-                </form>
-            </div>
-        </footer>
+            </footer>
+        </div>
     </div>
 
     <script src="/static/script.js"></script>

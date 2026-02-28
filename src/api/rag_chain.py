@@ -203,7 +203,7 @@ class LegalRAG:
                     config=genai.types.GenerateContentConfig(
                         system_instruction=SYSTEM_PROMPT,
                         temperature=0.1,
-                        max_output_tokens=2048,
+                        max_output_tokens=8192,
                     ),
                 )
                 answer = response.text
